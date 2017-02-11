@@ -1,0 +1,16 @@
+name = Wiki profile
+description = Install with commonly used features pre-configured.
+core = 7.x
+dependencies[] = block
+dependencies[] = comment
+dependencies[] = contextual
+dependencies[] = dashboard
+dependencies[] = image
+dependencies[] = list
+dependencies[] = menu
+dependencies[] = number
+dependencies[] = options
+dependencies[] = path
+dependencies[] = taxonomy
+dependencies[] = field_ui
+dependencies[] = file
