@@ -2,158 +2,37 @@
 
 /**
  * @file
- * Install, update and uninstall functions for the standard installation profile.
+ * Install functions for the wiki installation profile.
  */
 
 /**
  * Implements hook_install().
- *
- * Perform actions to set up the site for this profile.
- *
- * @see system_install()
  */
 function wiki_install() {
-  // Add text formats.
-  $filtered_html_format = array(
-    'format' => 'filtered_html',
-    'name' => 'Filtered HTML',
-    'weight' => 0,
-    'filters' => array(
-      // URL filter.
-      'filter_url' => array(
-        'weight' => 0,
-        'status' => 1,
-      ),
-      // HTML filter.
-      'filter_html' => array(
-        'weight' => 1,
-        'status' => 1,
-      ),
-      // Line break filter.
-      'filter_autop' => array(
-        'weight' => 2,
-        'status' => 1,
-      ),
-      // HTML corrector filter.
-      'filter_htmlcorrector' => array(
-        'weight' => 10,
-        'status' => 1,
-      ),
-    ),
-  );
-  $filtered_html_format = (object) $filtered_html_format;
-  filter_format_save($filtered_html_format);
-
-  $full_html_format = array(
-    'format' => 'full_html',
-    'name' => 'Full HTML',
-    'weight' => 1,
-    'filters' => array(
-      // URL filter.
-      'filter_url' => array(
-        'weight' => 0,
-        'status' => 1,
-      ),
-      // Line break filter.
-      'filter_autop' => array(
-        'weight' => 1,
-        'status' => 1,
-      ),
-      // HTML corrector filter.
-      'filter_htmlcorrector' => array(
-        'weight' => 10,
-        'status' => 1,
-      ),
-    ),
-  );
-  $full_html_format = (object) $full_html_format;
-  filter_format_save($full_html_format);
-
-  // Enable some standard blocks.
-  $default_theme = variable_get('theme_default', 'bartik');
-  $admin_theme = 'seven';
-  $blocks = array(
-    array(
+  $default_theme = 'wiki_adminimal';
+  $admin_theme = 'adminimal';
+  $blocks = [
+    [
       'module' => 'system',
       'delta' => 'main',
-      'theme' => $default_theme,
-      'status' => 1,
       'weight' => 0,
       'region' => 'content',
-      'pages' => '',
-      'cache' => -1,
-    ),
-    array(
-      'module' => 'node',
-      'delta' => 'recent',
-      'theme' => $admin_theme,
-      'status' => 1,
-      'weight' => 10,
-      'region' => 'dashboard_main',
-      'pages' => '',
-      'cache' => -1,
-    ),
-    array(
-      'module' => 'user',
-      'delta' => 'login',
-      'theme' => $default_theme,
-      'status' => 1,
-      'weight' => 0,
-      'region' => 'sidebar_first',
-      'pages' => '',
-      'cache' => -1,
-    ),
-    array(
-      'module' => 'system',
-      'delta' => 'navigation',
-      'theme' => $default_theme,
-      'status' => 1,
-      'weight' => 0,
-      'region' => 'sidebar_first',
-      'pages' => '',
-      'cache' => -1,
-    ),
-    array(
+    ],
+    [
       'module' => 'system',
       'delta' => 'help',
-      'theme' => $default_theme,
-      'status' => 1,
       'weight' => 0,
       'region' => 'help',
-      'pages' => '',
-      'cache' => -1,
-    ),
-    array(
+    ],
+    [
       'module' => 'system',
-      'delta' => 'main',
-      'theme' => $admin_theme,
-      'status' => 1,
+      'delta' => 'main-menu',
       'weight' => 0,
-      'region' => 'content',
-      'pages' => '',
-      'cache' => -1,
-    ),
-    array(
-      'module' => 'user',
-      'delta' => 'login',
-      'theme' => $admin_theme,
-      'status' => 1,
-      'weight' => 10,
-      'region' => 'content',
-      'pages' => '',
-      'cache' => -1,
-    ),
-    array(
-      'module' => 'user',
-      'delta' => 'new',
-      'theme' => $admin_theme,
-      'status' => 1,
-      'weight' => 0,
-      'region' => 'dashboard_sidebar',
-      'pages' => '',
-      'cache' => -1,
-    ),
-  );
+      'region' => 'sidebar_left',
+      'title' => '<none>',
+      'theme' => $default_theme,
+    ],
+  ];
 
   $query = db_insert('block')->fields([
     'module',
@@ -167,38 +46,49 @@ function wiki_install() {
   ]);
 
   foreach ($blocks as $block) {
-    $query->values($block);
+    $query->values($block + [
+      'theme' => $admin_theme,
+      'status' => 1,
+      'pages' => '',
+      'cache' => -1,
+    ]);
   }
   $query->execute();
 
-  variable_set('node_options_page', array('status'));
-  variable_set('comment_page', COMMENT_NODE_HIDDEN);
-  variable_set('node_submitted_page', FALSE);
-
-  variable_set('user_pictures', '1');
-  variable_set('user_picture_dimensions', '1024x1024');
-  variable_set('user_picture_file_size', '800');
-  variable_set('user_picture_style', 'thumbnail');
-
-  variable_set('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
-
-  // Enable default permissions for system roles.
-  $filtered_html_permission = filter_permission_name($filtered_html_format);
-
-  user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, [
-    'access content',
-    'access comments',
-    $filtered_html_permission,
+  theme_enable([
+    $admin_theme,
+    $default_theme,
   ]);
 
-  user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, [
-    'access content',
-    'access comments',
-    'post comments',
-    'skip comment approval',
-    $filtered_html_permission,
+  variable_set('admin_theme', $admin_theme);
+  variable_set('theme_default', $default_theme);
+  variable_set('update_notification_threshold', 'security');
+  variable_set('node_admin_theme', FALSE);
+  variable_set('user_register', 0);
+  variable_set('site_403', 'user/login');
+  variable_set('site_frontpage', 'user');
+
+  module_enable([
+    'admin_menu',
+    'adminimal_admin_menu',
+    'module_filter',
+    'libraries',
+    'ctools',
+    'module_filter',
+    'entity',
+    'ds',
+    'ds_forms',
+    'ds_ui',
+    'rabbit_hole',
+    'views',
+    'views_ui',
+    'better_exposed_filters',
+    'search_api_views',
+    'search_api',
+    'search_api_db',
+    'wysiwyg',
+    'wysiwyg_codesnippet',
+    'features',
   ]);
 
-  variable_set('admin_theme', 'seven');
-  variable_set('node_admin_theme', '1');
 }
